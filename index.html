@@ -1,1 +1,87 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>QR Scan Result</title>
+  <style>
+    body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Noto Sans",Arial;display:flex;
+      min-height:100vh;align-items:center;justify-content:center;background:#f4f6fb;margin:0;}
+    .card{background:white;padding:28px;border-radius:12px;box-shadow:0 8px 30px rgba(20,30,60,.08);
+      width:min(720px,92vw);text-align:center;}
+    h1{margin:0 0 6px;font-size:20px}
+    p{margin:6px 0;color:#344;line-height:1.45}
+    .label{font-weight:700;color:#111;margin-top:14px}
+    .value{font-size:18px;padding:8px 12px;background:#f2f6ff;border-radius:8px;display:inline-block;margin-top:8px}
+    .small{font-size:13px;color:#666;margin-top:12px}
+    .btn{display:inline-block;margin-top:18px;padding:10px 14px;border-radius:8px;background:#1f6feb;color:#fff;text-decoration:none}
+    .qr-hint{margin-top:14px;font-size:13px;color:#556}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Scan Result</h1>
+    <p class="small">यदि URL में जानकारी उपलब्ध है तो नीचे दिखाई देगी — वरना आप नीचे दिए फ़ॉर्म से भी सेट कर सकते हैं।</p>
 
+    <div class="label">Name</div>
+    <div id="name" class="value">—</div>
+
+    <div class="label">Father's Name</div>
+    <div id="father" class="value">—</div>
+
+    <div class="label">मकसद / Message</div>
+    <div id="message" class="value">—</div>
+
+    <div class="qr-hint">यह पेज URL query parameters से पढ़ता है: <code>?name=...&father=...&msg=...</code></div>
+
+    <form id="editForm" style="margin-top:16px" onsubmit="applyFromForm(event)">
+      <input id="fName" placeholder="Name" style="padding:8px;border-radius:6px;border:1px solid #d6dfee;width:60%;margin:6px 0"><br>
+      <input id="fFather" placeholder="Father's Name" style="padding:8px;border-radius:6px;border:1px solid #d6dfee;width:60%;margin:6px 0"><br>
+      <input id="fMsg" placeholder="Message / मकसद" style="padding:8px;border-radius:6px;border:1px solid #d6dfee;width:60%;margin:6px 0"><br>
+      <button class="btn" type="submit">URL बनाएँ (QR के लिए)</button>
+    </form>
+
+    <div id="resultUrl" style="margin-top:12px;word-break:break-all"></div>
+  </div>
+
+<script>
+  function getQS(){ 
+    const qp = {};
+    location.search.replace(/^\?/, '').split('&').forEach(s=>{
+      if(!s) return;
+      const [k,v] = s.split('=');
+      qp[decodeURIComponent(k||'')] = decodeURIComponent(v||'');
+    });
+    return qp;
+  }
+
+  function show(data){
+    document.getElementById('name').textContent = data.name || '—';
+    document.getElementById('father').textContent = data.father || '—';
+    document.getElementById('message').textContent = data.msg || '—';
+
+    document.getElementById('fName').value = data.name || '';
+    document.getElementById('fFather').value = data.father || '';
+    document.getElementById('fMsg').value = data.msg || '';
+  }
+
+  const qp = getQS();
+  show(qp);
+
+  function applyFromForm(e){
+    e.preventDefault();
+    const n = encodeURIComponent(document.getElementById('fName').value.trim());
+    const f = encodeURIComponent(document.getElementById('fFather').value.trim());
+    const m = encodeURIComponent(document.getElementById('fMsg').value.trim());
+
+    const base = location.origin === 'null' || !location.origin ? 
+                 (location.protocol + '//' + location.host + location.pathname) : 
+                 (location.origin + location.pathname);
+
+    const url = `${base}?name=${n}&father=${f}&msg=${m}`;
+    document.getElementById('resultUrl').innerHTML = `<div><b>Shareable URL:</b><br><a href="${url}" target="_blank">${url}</a></div>
+      <div style="margin-top:8px;color:#444">इस URL को QR में encode कर दें — स्कैन करने पर यही पेज खुलकर जानकारी दिखाएगा।</div>`;
+  }
+</script>
+</body>
+</html>
